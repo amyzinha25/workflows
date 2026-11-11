@@ -33,6 +33,9 @@ jobs:
           GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
           GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
           GOOGLE_ADS_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_CUSTOMER_ID }}
+          # Configuração econômica (menos consumo do crédito grátis do Apify)
+          PAISES: "US,GB"
+          RESULTADOS_POR_BUSCA: "30"
         run: python radar_lancamentos.py
 
       - name: Salvar histórico (seen.json)
