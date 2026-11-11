@@ -1,0 +1,47 @@
+name: Radar de Lançamentos
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # 11:00 UTC = 8:00 da manhã em Brasília
+  workflow_dispatch:        # permite rodar manualmente pelo botão "Run workflow"
+
+permissions:
+  contents: write           # necessário para salvar o seen.json (anti-repetição)
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Rodar radar
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
+          GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID }}
+          GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
+          GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
+          GOOGLE_ADS_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_CUSTOMER_ID }}
+          # Configuração econômica (menos consumo do crédito grátis do Apify)
+          PAISES: "US,GB"
+          RESULTADOS_POR_BUSCA: "30"
+        run: python radar_lancamentos.py
+
+      - name: Salvar histórico (seen.json)
+        run: |
+          if [ -f seen.json ]; then
+            git config user.name "radar-bot"
+            git config user.email "radar-bot@users.noreply.github.com"
+            git add seen.json
+            git diff --staged --quiet || (git commit -m "atualiza histórico" && git push)
+          fi
